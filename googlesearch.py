@@ -1,8 +1,11 @@
-import requests
 import os
 from datetime import datetime
 from pathlib import Path
 from time import sleep
+from imghdr import what
+
+import requests
+
 from utils import format_filename
 
 imagesPath = Path('images/')
@@ -47,6 +50,11 @@ def saveImage(imageURL, filename):
         for chunk in r.iter_content(chunk_size=128):
             fd.write(chunk)
 
+    #check if the file is jpg, if not, remove
+    if not what(filename) == 'jpeg':
+        os.remove(filename)
+        print('File not a valid jpeg. Removing.')
+
 def iterItems(json_response):
     """
     Takes json response body from google api and results_func as an arguments and iterates over results.
@@ -64,10 +72,12 @@ def iterPages(googleQuery, pagesToScrape, searchImage=True, startPage=1, log=Tru
     for i in range(pagesToScrape+startPage-1):
         r = makeGetRequest(googleQuery, searchImage=searchImage, start=startPage+10*i)
         iterItems(r)
-        print(f'Finished scraping page {i+1}. Sleeping {sleepSeconds} seconds.' )
+        if log:
+            print(f'Finished scraping page {i+1}. Sleeping {sleepSeconds} seconds.' )
+
         sleep(sleepSeconds)
 
-iterPages('cat', pagesToScrape=10, startPage=1, sleepSeconds=0)
+iterPages('cat', pagesToScrape=1, startPage=1, sleepSeconds=0)
 
 
 
